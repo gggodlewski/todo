@@ -1,9 +1,11 @@
-import { React, useState } from "react";
+import { React, useState, useEffect } from "react";
 import TodoList from "./TodoList";
 import TodoForm from "./TodoForm";
+import { useFetch } from "../hooks/useFetch";
+import TodoListSkeleton from "./TodoListSkeleton";
 
 function Todos() {
-  const [todos, setTodos] = useState([]);
+  const { data: todos, isLoading, postData, deleteData } = useFetch("http://localhost:3000/todos");
   const [todo, setTodo] = useState("");
 
   const handleOnChange = (e) => {
@@ -13,20 +15,20 @@ function Todos() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (todo.length <= 0) return;
-    const id = new Date().getTime().toString();
-    setTodos((prevState) => [...prevState, { task: todo, id }]);
+    postData({
+      task: todo,
+    });
     setTodo("");
   };
 
   const handleDelete = (e) => {
-    const newTodos = todos.filter((todo) => todo.id !== e.target.dataset.id);
-    setTodos(newTodos);
+    deleteData(+e.target.dataset.id);
   };
 
   return (
     <div className="w-full max-w-5xl p-5 flex flex-col gap-4 bg-black rounded-md shadow-lg">
-      <TodoList todos={todos} handleDelete={handleDelete} />
-      <TodoForm todo={todo} handleOnChange={handleOnChange} handleSubmit={handleSubmit} />
+      {isLoading && todos.length <= 0 ? <TodoListSkeleton /> : <TodoList todos={todos} handleDelete={handleDelete} />}
+      <TodoForm loading={isLoading} todo={todo} handleOnChange={handleOnChange} handleSubmit={handleSubmit} />
     </div>
   );
 }
